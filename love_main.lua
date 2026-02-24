@@ -1,6 +1,5 @@
 UI2D = require "ui2d..ui2d"
-
-local txt1 = ""
+ui_main = require("ui_main")
 
 function love.load()
 	-- Initialize the library. You can optionally pass a font size. Default is 14.
@@ -31,15 +30,7 @@ end
 function love.draw()
 	love.graphics.clear( 0.2, 0.2, 0.7 )
 
-	UI2D.Begin( "window", 0, 0 )
-	txt1, finished_editing = UI2D.TextBox( "", 40, txt1 )
-	if UI2D.Button( "submit" ) then
-		txt1 = ""
-	end
-	UI2D.SameLine()
-	if finished_editing then
-	end
-	UI2D.End()
+	ui_main.draw()
 
 	-- This marks the end of the GUI.
 	UI2D.RenderFrame()

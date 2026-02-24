@@ -1,15 +1,18 @@
 local fennel = require("fennel")
 
+local export = {}
+
 local is_lovr = _G.lovr
 if is_lovr then
   love = lovr
 end
 
-local input = {}
-local buffer = {}
+export.input = {}
+export.buffer = {}
+
 local incomplete_3f = false
 local function out(xs)
-  local tbl_24_ = buffer
+  local tbl_24_ = export.buffer
   for _, x in ipairs(xs) do
     local val_25_ = x
     table.insert(tbl_24_, val_25_)
@@ -23,7 +26,7 @@ _G.g_print = function(...)
 end
 local function err(_errtype, msg)
   for line in msg:gmatch("([^\n]+)") do
-    table.insert(buffer, {{0.9, 0.4, 0.5}, line})
+    table.insert(export.buffer, {{0.9, 0.4, 0.5}, line})
   end
   return nil
 end
@@ -44,12 +47,16 @@ if is_lovr then
   end
 end
 
-local function enter()
+function export.eval(s)
+  coroutine.resume(repl, s)
+end
+
+function export.enter()
   do
     local input_text
     local function _1_()
-      table.insert(input, "\n")
-      return input
+      table.insert(export.input, "\n")
+      return export.input
     end
     input_text = table.concat(_1_())
     local _, _let_2_ = coroutine.resume(repl, input_text)
@@ -57,25 +64,25 @@ local function enter()
     local stack_size = _let_3_["stack-size"]
     incomplete_3f = (0 < stack_size)
   end
-  while next(input) do
-    table.remove(input)
+  while next(export.input) do
+    table.remove(export.input)
   end
   return nil
 end
-love.keypressed = function(key)
-  if (key == "return") then
-    return enter()
-  elseif (key == "backspace") then
-    return table.remove(input)
-  elseif (key == "escape") then
-    return love.event.quit()
-  else
-    return nil
-  end
-end
-love.textinput = function(text)
-  return table.insert(input, text)
-end
+-- love.keypressed = function(key)
+--   if (key == "return") then
+--     return enter()
+--   elseif (key == "backspace") then
+--     return table.remove(input)
+--   elseif (key == "escape") then
+--     return love.event.quit()
+--   else
+--     return nil
+--   end
+-- end
+-- love.textinput = function(text)
+--   return table.insert(export.input, text)
+-- end
 
 local function getFont()
   if is_lovr then
@@ -114,32 +121,42 @@ end
 
 local dp = _G.print
 
-local draw_fn = function()
-  local w, h = getWindowSize()
-  local fh = getFont():getHeight()
-  for i = #buffer, 1, -1 do
-    local case_5_ = buffer[i]
-    if (nil ~= case_5_) then
-      local line = case_5_
-      graphcis_print(line, 2, (i * (fh + 2)))
-    else
-    end
-  end
-  line(0, (h - fh - 4), w, (h - fh - 4))
-  if incomplete_3f then
-    graphcis_print("- ", 2, (h - fh - 2))
-  else
-    graphcis_print("> ", 2, (h - fh - 2))
-  end
-  return graphcis_print(table.concat(input), 15, (h - fh - 2))
+function setInput(s)
+  input = s
 end
 
-if is_lovr then
-  lovr.draw = function(pass)
-    draw_fn()
-  end
-else
-  love.draw = draw_fn
+function getInput()
+  return input
 end
 
-return love.draw
+-- local draw_fn = function()
+--   local w, h = getWindowSize()
+--   local fh = getFont():getHeight()
+--   for i = #buffer, 1, -1 do
+--     local case_5_ = buffer[i]
+--     if (nil ~= case_5_) then
+--       local line = case_5_
+--       graphcis_print(line, 2, (i * (fh + 2)))
+--     else
+--     end
+--   end
+--   line(0, (h - fh - 4), w, (h - fh - 4))
+--   if incomplete_3f then
+--     graphcis_print("- ", 2, (h - fh - 2))
+--   else
+--     graphcis_print("> ", 2, (h - fh - 2))
+--   end
+--   return graphcis_print(table.concat(input), 15, (h - fh - 2))
+-- end
+
+-- if is_lovr then
+--   lovr.draw = function(pass)
+--     draw_fn()
+--   end
+-- else
+--   love.draw = draw_fn
+-- end
+
+-- return love.draw
+
+return export

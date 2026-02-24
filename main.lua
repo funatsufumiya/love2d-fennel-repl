@@ -1,4 +1,10 @@
 local fennel = require("fennel")
+
+local is_lovr = _G.lovr
+if is_lovr then
+  love = lovr
+end
+
 local input = {}
 local buffer = {}
 local incomplete_3f = false
@@ -10,7 +16,8 @@ local function out(xs)
   end
   return tbl_24_
 end
-_G.print = function(...)
+local dp = print
+_G.g_print = function(...)
   out({...})
   return nil
 end
@@ -24,6 +31,19 @@ local repl = coroutine.create(function (opt)
   fennel.repl(opt)
 end)
 coroutine.resume(repl, {readChunk = coroutine.yield, onValues = out, onError = err})
+
+if is_lovr then
+  lovr.conf = function(t)
+    w = t.window.width
+    h = t.window.height
+
+    g_print(width .. " x " .. height)
+  end
+  lovr.resize = function(width, height)
+    g_print(width .. " x " .. height)
+  end
+end
+
 local function enter()
   do
     local input_text
@@ -56,23 +76,70 @@ end
 love.textinput = function(text)
   return table.insert(input, text)
 end
-love.draw = function()
-  local w, h = love.window.getMode()
-  local fh = love.graphics.getFont():getHeight()
+
+local function getFont()
+  if is_lovr then
+    return lovr.graphics.getDefaultFont()
+  else
+    return love.graphics.getFont()
+  end
+end
+local function getWindowSize()
+  if is_lovr then
+    pass = lovr.graphics.getWindowPass()
+    return pass:getWidth(), pass:getHeight()
+  else
+    return love.window.getMode()
+  end
+end
+local function line(...)
+  if is_lovr then
+    local x1, y1, x2, y2 = ... 
+    pass = lovr.graphics.getWindowPass()
+    pass:line(x1, y1, 0, x2, y2, 0)
+  else
+    love.graphics.line(...)
+  end
+end
+
+local function graphcis_print(...)
+  if is_lovr then
+    local s, x, y = ...
+    pass = lovr.graphics.getWindowPass()
+    pass:text(s, x, y, 0)
+  else
+    love.graphics.print(...)
+  end
+end
+
+local dp = _G.print
+
+local draw_fn = function()
+  local w, h = getWindowSize()
+  local fh = getFont():getHeight()
   for i = #buffer, 1, -1 do
     local case_5_ = buffer[i]
     if (nil ~= case_5_) then
       local line = case_5_
-      love.graphics.print(line, 2, (i * (fh + 2)))
+      graphcis_print(line, 2, (i * (fh + 2)))
     else
     end
   end
-  love.graphics.line(0, (h - fh - 4), w, (h - fh - 4))
+  line(0, (h - fh - 4), w, (h - fh - 4))
   if incomplete_3f then
-    love.graphics.print("- ", 2, (h - fh - 2))
+    graphcis_print("- ", 2, (h - fh - 2))
   else
-    love.graphics.print("> ", 2, (h - fh - 2))
+    graphcis_print("> ", 2, (h - fh - 2))
   end
-  return love.graphics.print(table.concat(input), 15, (h - fh - 2))
+  return graphcis_print(table.concat(input), 15, (h - fh - 2))
 end
+
+if is_lovr then
+  lovr.draw = function(pass)
+    draw_fn()
+  end
+else
+  love.draw = draw_fn
+end
+
 return love.draw

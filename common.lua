@@ -33,10 +33,10 @@ end)
 coroutine.resume(repl, {readChunk = coroutine.yield, onValues = export.out, onError = export.err})
 
 function export.eval(s)
-  dp(s)
+  -- dp(s)
   table.insert(export.buffer, "> " .. s)
   coroutine.resume(repl, s .. "\n")
-  dp(#export.buffer)
+  -- dp(#export.buffer)
 end
 
 function export.setInput(s)
